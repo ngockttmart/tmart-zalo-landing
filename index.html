@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Nhóm Zalo cửa hàng Tmart</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #1f2937;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0b8f43, #087536);
+      color: white;
+      padding: 26px 18px 26px;
+      text-align: center;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 16px;
+      max-width: 220px;
+      height: auto;
+    }
+
+    .header h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .header p {
+      margin: 0;
+      font-size: 17px;
+      opacity: 0.96;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .search-box {
+      background: white;
+      padding: 14px;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      margin-top: -38px;
+      position: relative;
+      z-index: 2;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #0b8f43;
+    }
+
+    .count {
+      margin: 18px 2px 12px;
+      font-size: 15px;
+      color: #6b7280;
+    }
+
+    .store-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 17px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+    }
+
+    .store-name {
+      margin: 0 0 9px;
+      font-size: 21px;
+      color: #0b8f43;
+      font-weight: 800;
+    }
+
+    .meta {
+      margin: 7px 0;
+      font-size: 15px;
+      line-height: 1.45;
+      color: #374151;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .btn-zalo {
+      background: #0068ff;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0, 104, 255, 0.25);
+    }
+
+    .btn-map {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .qr {
+      margin-top: 14px;
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 30px 10px;
+      color: #6b7280;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      padding: 22px 10px 30px;
+    }
+
+    @media (max-width: 640px) {
+      .header {
+        padding: 22px 14px 22px;
+      }
+
+      .logo {
+        max-width: 180px;
+      }
+
+      .header h1 {
+        font-size: 26px;
+      }
+
+      .header p {
+        font-size: 14px;
+      }
+
+      .container {
+        padding: 14px;
+      }
+
+      .search-box {
+        margin-top: -28px;
+      }
+
+      .store-name {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <img class="logo" src="https://drive.google.com/thumbnail?id=1g-W6G6c2kwt-0t6_Sxah_lIxohac_H_d&sz=w500" alt="Logo Tmart">
+    <h1>Nhóm Zalo cửa hàng Tmart</h1>
+    <p>Chọn cửa hàng gần bạn để nhận khuyến mãi và cập nhật ưu đãi mỗi ngày.</p>
+  </div>
+
+  <div class="container">
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="Tìm theo tên cửa hàng, phường/xã hoặc địa chỉ...">
+    </div>
+
+    <div id="count" class="count">Đang tải danh sách cửa hàng...</div>
+    <div id="storeList" class="store-list"></div>
+  </div>
+
+  <div class="footer">
+    Tmart - Chọn cửa hàng gần bạn để vào nhóm Zalo và nhận ưu đãi mỗi ngày
+  </div>
+
+  <script>
+    const DATA_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRg9H9Xx0RhbfHwffXbpIMQAp13auzs0o1yxJIwKfI_FXmiGSxRqPY3qgBZjlPlfEX1eKo4msiSPCoc/pub?gid=1432491366&single=true&output=tsv';
+
+    let allStores = [];
+
+    function normalizeText(text) {
+      return String(text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function parseTSV(text) {
+      const rows = text.trim().split(/\r?\n/).map(row => row.split('\t'));
+      const headers = rows.shift();
+
+      return rows.map(row => {
+        const item = {};
+        headers.forEach((header, index) => {
+          item[header] = row[index] ? String(row[index]).trim() : '';
+        });
+        return item;
+      });
+    }
+
+    function renderStores(stores) {
+      const list = document.getElementById('storeList');
+      const count = document.getElementById('count');
+
+      count.textContent = `Hiển thị ${stores.length} cửa hàng`;
+
+      if (!stores.length) {
+        list.innerHTML = `<div class="empty">Không tìm thấy cửa hàng phù hợp.</div>`;
+        return;
+      }
+
+      list.innerHTML = stores.map(store => {
+        const mapButton = store.LinkMaps
+          ? `<a class="btn btn-map" href="${store.LinkMaps}" target="_blank" rel="noopener">Xem bản đồ</a>`
+          : '';
+
+        const qrImage = store.LinkQR
+          ? `<img class="qr" src="${store.LinkQR}" alt="QR nhóm Zalo ${store.TenCH}">`
+          : '';
+
+        return `
+          <div class="card">
+            <h2 class="store-name">${store.TenCH || ''}</h2>
+            ${store.PhuongXa ? `<p class="meta"><strong>Khu vực:</strong> ${store.PhuongXa}</p>` : ''}
+            ${store.DiaChi ? `<p class="meta"><strong>Địa chỉ:</strong> ${store.DiaChi}</p>` : ''}
+            ${store.GioMoCua ? `<p class="meta"><strong>Giờ mở cửa:</strong> ${store.GioMoCua}</p>` : ''}
+
+            <div class="actions">
+              <a class="btn btn-zalo" href="${store.LinkZalo}" target="_blank" rel="noopener">Vào nhóm Zalo</a>
+              ${mapButton}
+            </div>
+
+            ${qrImage}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterStores() {
+      const keyword = normalizeText(document.getElementById('searchInput').value);
+
+      const filtered = allStores.filter(store => {
+        const text = normalizeText(`
+          ${store.TenCH}
+          ${store.PhuongXa}
+          ${store.DiaChi}
+        `);
+
+        return text.includes(keyword);
+      });
+
+      renderStores(filtered);
+    }
+
+    async function loadStores() {
+      try {
+        const response = await fetch(DATA_URL);
+        const text = await response.text();
+
+        allStores = parseTSV(text)
+          .filter(item => item.TrangThai === 'Hiện')
+          .filter(item => item.TenCH && item.LinkZalo);
+
+        renderStores(allStores);
+      } catch (error) {
+        document.getElementById('count').textContent = 'Không tải được danh sách cửa hàng.';
+        document.getElementById('storeList').innerHTML = `<div class="empty">Vui lòng thử lại sau.</div>`;
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterStores);
+
+    loadStores();
+  </script>
+</body>
+</html>
